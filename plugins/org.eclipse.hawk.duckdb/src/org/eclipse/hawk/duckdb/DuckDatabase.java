@@ -41,6 +41,7 @@ public class DuckDatabase implements IGraphDatabase {
 
 	private File duckDBFile;
 	private DuckTransaction tx;
+	private Mode mode = Mode.NO_TX_MODE;
 
 	@Override
 	public String getHumanReadableName() {
@@ -71,8 +72,9 @@ public class DuckDatabase implements IGraphDatabase {
 				LOGGER.error("Could not ensure the table exists", e);
 			}
 			
+			// By default, we're on transactional mode
 			tx = new DuckTransaction(duckDB);
-			
+			exitBatchMode();
 		} catch (ClassNotFoundException e) {
 			LOGGER.error("Could not find the class for the DuckDB driver", e);
 		} catch (SQLException e) {
@@ -155,18 +157,19 @@ public class DuckDatabase implements IGraphDatabase {
 
 	@Override
 	public IGraphNodeIndex getMetamodelIndex() {
-		// TODO Auto-generated method stub
-		return null;
+		return getOrCreateNodeIndex("hawk_metamodels");
 	}
 
 	@Override
 	public IGraphNodeIndex getFileIndex() {
-		// TODO Auto-generated method stub
-		return null;
+		return getOrCreateNodeIndex("hawk_files");
 	}
 
 	@Override
 	public IGraphTransaction beginTransaction() throws Exception {
+		if (mode == Mode.NO_TX_MODE) {
+			exitBatchMode();
+		}
 		tx.begin();
 		return tx;
 	}
@@ -178,12 +181,14 @@ public class DuckDatabase implements IGraphDatabase {
 
 	@Override
 	public void enterBatchMode() {
-		// no-op
+		// no-op for now (may switch to using CSVs in the future)
+		mode = Mode.NO_TX_MODE;
 	}
 
 	@Override
 	public void exitBatchMode() {
-		// no-op
+		// no-op for now
+		mode = Mode.TX_MODE;
 	}
 
 	@Override
@@ -341,14 +346,12 @@ public class DuckDatabase implements IGraphDatabase {
 
 	@Override
 	public String getTempDir() {
-		// TODO Auto-generated method stub
-		return null;
+		return new File(duckDBFile.getParentFile(), "temp").getAbsolutePath();
 	}
 
 	@Override
 	public Mode currentMode() {
-		// TODO Auto-generated method stub
-		return Mode.TX_MODE;
+		return mode;
 	}
 
 	@Override
