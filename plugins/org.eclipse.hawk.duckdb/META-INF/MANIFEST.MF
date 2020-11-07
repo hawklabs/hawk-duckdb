@@ -8,5 +8,7 @@ Automatic-Module-Name: org.eclipse.hawk.duckdb
 Bundle-RequiredExecutionEnvironment: JavaSE-11
 Bundle-ClassPath: lib/jars/duckdb_jdbc-0.2.2.jar,
  .
-Require-Bundle: org.eclipse.hawk.core;bundle-version="2.1.0"
+Require-Bundle: org.eclipse.hawk.core;bundle-version="2.1.0",
+ org.slf4j.api;bundle-version="1.7.2",
+ org.apache.commons.codec;bundle-version="1.13.0"
 Export-Package: org.eclipse.hawk.duckdb
