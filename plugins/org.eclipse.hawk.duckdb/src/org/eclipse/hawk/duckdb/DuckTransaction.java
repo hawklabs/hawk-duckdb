@@ -8,6 +8,10 @@ import org.eclipse.hawk.core.graph.IGraphTransaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Companion object to a {@link DuckDatabase} that keeps track of the single transaction
+ * that we handle in it.
+ */
 public class DuckTransaction implements IGraphTransaction {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(DuckTransaction.class);

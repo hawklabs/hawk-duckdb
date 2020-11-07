@@ -8,10 +8,12 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.function.Function;
 
 import org.eclipse.hawk.core.IConsole;
 import org.eclipse.hawk.core.graph.IGraphDatabase;
@@ -30,8 +32,10 @@ public class DuckDatabase implements IGraphDatabase {
 
 	private static final String DUCKDB_FILENAME  = "duck.db";
 	private static final String SEQUENCE_NODES   = "nodes_seq";
-	private static final String TABLE_NODES      = "nodes";
+	private static final String SEQUENCE_EDGES   = "edges_seq";
 
+	protected static final String TABLE_NODES = "nodes";
+	protected static final String TABLE_EDGES = "edges";
 	protected static final String TABLE_PROPERTIES = "properties";
 
 	private File duckDBFile;
@@ -79,9 +83,9 @@ public class DuckDatabase implements IGraphDatabase {
 	}
 
 	private void initialiseSchema(Statement stmt) throws SQLException {
-		stmt.execute(String.format(
-				"CREATE SEQUENCE %s;",
-				SEQUENCE_NODES));
+		// Nodes
+
+		createSequence(stmt, SEQUENCE_NODES);
 
 		stmt.execute(String.format(
 			"CREATE TABLE %s ("
@@ -90,10 +94,10 @@ public class DuckDatabase implements IGraphDatabase {
 			+ ");",
 			TABLE_NODES
 			));
-		
-		stmt.execute(String.format(
-			"CREATE INDEX %s_label ON %s (label);",
-			TABLE_NODES, TABLE_NODES));
+
+		createIndex(stmt, TABLE_NODES, "label", "label");
+
+		// Node properties
 
 		stmt.execute(String.format(
 			"CREATE TABLE %s ("
@@ -101,11 +105,37 @@ public class DuckDatabase implements IGraphDatabase {
 			+ "  name VARCHAR NOT NULL, %s,"
 			+ "  PRIMARY KEY (node_id, name)"
 			+ ");",
-			TABLE_PROPERTIES, DuckNode.ValueType.sqlTableColumns()));
+			TABLE_PROPERTIES, PropertyValueType.sqlTableColumns()));
+
+		createIndex(stmt, TABLE_PROPERTIES, "nodeid", "node_id");
+
+		// Edges
+
+		createSequence(stmt, SEQUENCE_EDGES);
 
 		stmt.execute(String.format(
-			"CREATE INDEX %s_nodeid ON %s (node_id)",
-			TABLE_PROPERTIES, TABLE_PROPERTIES));
+			"CREATE TABLE %s ("
+			+ "id BIGINT PRIMARY KEY,"
+			+ "from_node_id BIGINT NOT NULL,"
+			+ "to_node_id BIGINT NOT NULL,"
+			+ "label STRING NOT NULL,"
+			+ "UNIQUE (from_node_id, to_node_id, label)"
+			+ ")",
+			TABLE_EDGES));
+
+		createIndex(stmt, TABLE_EDGES, "outgoing", "from_node_id", "label");
+		createIndex(stmt, TABLE_EDGES, "incoming", "to_node_id", "label");
+	}
+
+	private void createIndex(Statement stmt, String table, String idxSuffix, String... keys) throws SQLException {
+		stmt.execute(String.format(
+			"CREATE INDEX %s_%s ON %s (%s);",
+			table, idxSuffix, table, String.join(", ", Arrays.asList(keys))
+		));
+	}
+
+	private void createSequence(Statement stmt, final String seq) throws SQLException {
+		stmt.execute(String.format("CREATE SEQUENCE %s;", seq));
 	}
 
 	@Override
@@ -229,20 +259,63 @@ public class DuckDatabase implements IGraphDatabase {
 
 	@Override
 	public IGraphEdge createRelationship(IGraphNode start, IGraphNode end, String type) {
-		// TODO Auto-generated method stub
-		return null;
+		return createRelationship(start, end, type, null);
 	}
 
 	@Override
 	public IGraphEdge createRelationship(IGraphNode start, IGraphNode end, String type, Map<String, Object> props) {
-		// TODO Auto-generated method stub
+		final DuckNode dStart = (DuckNode) start;
+		final DuckNode dEnd = (DuckNode) end;
+		final long startId = dStart.getId();
+		final long endId = dEnd.getId();
+
+		try {
+			Function<Long, DuckEdge> createEdge = (id) -> 
+				new DuckEdge(duckDB, id, type, startId, endId); 
+
+			final String sqlFindExisting = String.format(
+				"SELECT id FROM %s WHERE from_node_id = ? AND to_node_id = ? AND label = ?;",
+				TABLE_EDGES);
+
+			try (PreparedStatement stmt = duckDB.prepareStatement(sqlFindExisting)) {
+				stmt.setLong(1, startId);
+				stmt.setLong(2, endId);
+				stmt.setString(3, type);
+
+				ResultSet rs = stmt.executeQuery();
+				if  (rs.next()) {
+					return createEdge.apply(rs.getLong(1));
+				}
+			}
+
+			final String sqlAddNewEdge = String.format(
+				"INSERT INTO %s (id, from_node_id, to_node_id, label) VALUES (?, ?, ?, ?);",
+				TABLE_EDGES);
+
+			try (PreparedStatement stmt = duckDB.prepareStatement(sqlAddNewEdge)) {
+				final long newEdgeId = nextValue(SEQUENCE_EDGES);
+
+				stmt.setLong(1, newEdgeId);
+				stmt.setLong(2, startId);
+				stmt.setLong(3, endId);
+				stmt.setString(4, type);
+				stmt.execute();
+
+				return createEdge.apply(newEdgeId);
+			}
+
+		} catch (SQLException e) {
+			LOGGER.error(String.format(
+				"Failed to add a new edge from %d to %d of type %s",
+				startId, endId, type), e);
+		}		
+		
 		return null;
 	}
 
 	@Override
 	public Object getGraph() {
-		// TODO Auto-generated method stub
-		return null;
+		return duckDB;
 	}
 
 	@Override
