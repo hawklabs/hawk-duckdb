@@ -1,35 +1,30 @@
 package org.eclipse.hawk.duckdb;
 
-import java.sql.Connection;
-import java.util.Objects;
-import java.util.Set;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 
 import org.eclipse.hawk.core.graph.IGraphEdge;
 import org.eclipse.hawk.core.graph.IGraphNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Represents a single edge, as stored in DuckDB. Mutable state is not kept in the object:
  * instead, it is always queried on the fly from DuckDB.
  */
-public class DuckEdge implements IGraphEdge {
+public class DuckEdge extends AbstractDuckElement implements IGraphEdge {
 
-	private final Connection duckDB;
-	private final long edgeId;
+	private static final Logger LOGGER = LoggerFactory.getLogger(DuckEdge.class);
+
 	private final String type;
 	private final long startNodeId;
 	private final long endNodeId;
 
-	public DuckEdge(Connection duckDB, long id, String type, long startNodeId, long endNodeId) {
-		this.duckDB = duckDB;
-		this.edgeId = id;
+	public DuckEdge(DuckDatabase db, long id, String type, long startNodeId, long endNodeId) {
+		super(db, id);
 		this.type = type;
 		this.startNodeId = startNodeId;
 		this.endNodeId = endNodeId;
-	}
-
-	@Override
-	public Long getId() {
-		return edgeId;
 	}
 
 	@Override
@@ -38,67 +33,37 @@ public class DuckEdge implements IGraphEdge {
 	}
 
 	@Override
-	public Set<String> getPropertyKeys() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public Object getProperty(String name) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public void setProperty(String name, Object value) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
 	public IGraphNode getStartNode() {
-		return new DuckNode(duckDB, startNodeId);
+		return new DuckNode(db, startNodeId);
 	}
 
 	@Override
 	public IGraphNode getEndNode() {
-		return new DuckNode(duckDB, endNodeId);
+		return new DuckNode(db, endNodeId);
 	}
 
 	@Override
 	public void delete() {
-		// TODO Auto-generated method stub
+		try {
+			deleteProperties();
 
-	}
-
-	@Override
-	public void removeProperty(String name) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public int hashCode() {
-		return Objects.hash(edgeId);
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		DuckEdge other = (DuckEdge) obj;
-		return edgeId == other.edgeId;
+			final String sqlDeleteEdge = String.format(
+				"DELETE FROM %s WHERE id = ?;", DuckDatabase.TABLE_EDGES
+			);
+			try (PreparedStatement stmt = db.duckDB.prepareStatement(sqlDeleteEdge)) {
+				stmt.setLong(1, id);
+				stmt.execute();
+			}
+		} catch (SQLException e) {
+			LOGGER.error("Failed to delete edge " + id, e);
+		}
 	}
 
 	@Override
 	public String toString() {
 		return String.format(
 			"DuckEdge [edgeId=%s, type=%s, startNodeId=%s, endNodeId=%s]",
-			edgeId, type, startNodeId, endNodeId);
+			id, type, startNodeId, endNodeId);
 	}
 	
 }
