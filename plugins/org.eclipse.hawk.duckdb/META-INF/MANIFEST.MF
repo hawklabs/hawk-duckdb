@@ -1,0 +1,12 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: DuckDB backend for Eclipse Hawk
+Bundle-SymbolicName: org.eclipse.hawk.duckdb
+Bundle-Version: 2.1.0.qualifier
+Bundle-Vendor: Aston University
+Automatic-Module-Name: org.eclipse.hawk.duckdb
+Bundle-RequiredExecutionEnvironment: JavaSE-11
+Bundle-ClassPath: lib/jars/duckdb_jdbc-0.2.2.jar,
+ .
+Require-Bundle: org.eclipse.hawk.core;bundle-version="2.1.0"
+Export-Package: org.eclipse.hawk.duckdb

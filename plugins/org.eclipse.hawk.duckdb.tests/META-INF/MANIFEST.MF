@@ -1,0 +1,13 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Tests for Eclise Hawk DuckDB backend
+Bundle-SymbolicName: org.eclipse.hawk.duckdb.tests
+Bundle-Version: 2.1.0.qualifier
+Bundle-Vendor: Aston University
+Automatic-Module-Name: org.eclipse.hawk.duckdb.tests
+Bundle-RequiredExecutionEnvironment: JavaSE-11
+Require-Bundle: org.eclipse.hawk.core;bundle-version="2.1.0",
+ org.eclipse.hawk.duckdb;bundle-version="2.1.0",
+ org.eclipse.hawk.backend.tests;bundle-version="2.1.0",
+ com.github.peterwippermann.junit4.parameterizedsuite_1.1.0;bundle-version="1.1.0",
+ org.junit;bundle-version="4.13.0"

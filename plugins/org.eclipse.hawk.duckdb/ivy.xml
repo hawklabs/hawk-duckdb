@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<ivy-module version="2.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="http://ant.apache.org/ivy/schemas/ivy.xsd">
+    <info
+        organisation="org.eclipse.hawk"
+        module="duckdb"
+        status="integration">
+	</info>
+	<dependencies>
+		<dependency org="org.duckdb" name="duckdb_jdbc" rev="0.2.2"/>
+	</dependencies>
+</ivy-module>
