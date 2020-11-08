@@ -54,8 +54,14 @@ public abstract class AbstractIndexBenchmark implements Benchmark {
 	protected void setupDatabase() throws IOException, ClassNotFoundException, SQLException {
 		File duckDBFile = File.createTempFile("duckbench", ".db");
 		duckDBFile.delete();
+
+		/*
+		 * Can comment out the deletion and uncomment the println to check the file
+		 * with the CLI client after the run. 
+		 */
 		duckDBFile.deleteOnExit();
-	
+		//System.out.println(String.format("%s uses DuckDB in %s", this, duckDBFile.getAbsolutePath()));
+
 		Class.forName("org.duckdb.DuckDBDriver");
 		this.duckDB = DriverManager.getConnection("jdbc:duckdb:" + duckDBFile.getPath());
 		duckDB.setAutoCommit(false);

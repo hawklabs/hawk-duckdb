@@ -9,23 +9,37 @@ import java.util.Map.Entry;
 
 import org.eclipse.hawk.duckdb.benchmarks.DataGenerator;
 
-public class TablePerIndexBenchmark extends AbstractIndexBenchmark {
+public class KeysTableBenchmark extends AbstractIndexBenchmark {
 
-	public TablePerIndexBenchmark(DataGenerator gen, int rows, int queryIterations) {
+	private static final String KEY_IDS_TABLE = "hawk_index_keys";
+
+	public KeysTableBenchmark(DataGenerator gen, int rows, int queryIterations) {
 		super(gen, rows, queryIterations);
 	}
 
 	@Override
 	protected BenchmarkQuery findNodesByIndexKey() throws SQLException {
 		return new PreparedByIndexBenchmarkQuery(duckDB,
-			(idx) -> String.format("SELECT * FROM idx_%s WHERE keyName = ?;", idx));
+			(idx) -> String.format(
+				"SELECT * FROM idx_%s WHERE keyId = (SELECT id FROM %s WHERE key = ? LIMIT 1);",
+				idx, KEY_IDS_TABLE));
 	}
 
 	@Override
 	protected void loadData() throws IOException, SQLException {
-		final Map<String, File> files = generator.csvsByIndex(nRows);
+		final Map<String, File> files = generator.csvsByIndexWithKeyIDs(nRows);
+		copyKeyIDs(files);
 		createIndexTables(files);
 		copyDataIntoTables(files);
+	}
+
+	protected void copyKeyIDs(final Map<String, File> files) throws SQLException {
+		File fKeyIDs = files.remove(DataGenerator.KEY_CSV_KEYIDS);
+		try (Statement stmt = duckDB.createStatement()) {
+			stmt.execute(String.format(
+				"COPY %s FROM '%s' (DELIMITER '|', HEADER);",
+				KEY_IDS_TABLE, fKeyIDs.getAbsolutePath()));
+		}
 	}
 
 	protected void copyDataIntoTables(final Map<String, File> writers) throws SQLException {
@@ -45,21 +59,28 @@ public class TablePerIndexBenchmark extends AbstractIndexBenchmark {
 			try (Statement stmt = duckDB.createStatement()) {
 				stmt.execute(String.format(
 					"CREATE TABLE idx_%s ("
-					+ "keyName VARCHAR NOT NULL,"
+					+ "keyid BIGINT NOT NULL,"
 					+ "keyValue BIGINT NOT NULL,"
 					+ "nodeId BIGINT NOT NULL"
 					+ ");", idxName));
 
-				createIndexTableIndices(idxName, stmt);
+				final String sqlCreateIndex = String.format(
+					"CREATE INDEX idx_%s_index ON idx_%s (keyid);",
+					idxName, idxName
+				);
+				// CREATE INDEX idx_a_index ON idx_a (keyid);
+				stmt.execute(sqlCreateIndex);
 			}
 		}
 	}
 
-	protected void createIndexTableIndices(String idxName, Statement stmt) throws SQLException {
-		// no-op in this class, override
-	}
-
 	protected void createSchema() throws SQLException {
-		// nothing - the schema is created based on data
+		try (Statement stmt = duckDB.createStatement()) {
+			stmt.execute(String.format(
+				"CREATE TABLE %s ("
+				+ "id BIGINT,"
+				+ "key VARCHAR PRIMARY KEY"
+				+ ");", KEY_IDS_TABLE));
+		}
 	}
 }
