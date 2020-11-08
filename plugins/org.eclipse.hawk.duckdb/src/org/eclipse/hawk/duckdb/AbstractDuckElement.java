@@ -93,16 +93,13 @@ public class AbstractDuckElement {
 	
 		final PropertyValueType vt = PropertyValueType.from(value);
 		final String updateQuery = String.format(
-			"UPDATE %s SET %s = ?%s WHERE elem_id = ? AND name = ?;",
+			"UPDATE %s SET %s = $1%s WHERE elem_id = $2 AND name = $3;",
 			DuckDatabase.TABLE_PROPERTIES, vt.getColumnName(), vt == PropertyValueType.BLOB ? "::BLOB" : "");
 	
 		try (PreparedStatement update = db.duckDB.prepareStatement(updateQuery)) {
-			// TODO GABOR: I have to put the new value as the *third* element in
-			// the UPDATE, or I get conversion errors mentioning the wrong value
-			// - this looks like a bug in the JDBC driver?
-			vt.setParameter(update, 3, value);
-			update.setLong(1, id);
-			update.setString(2, name);
+			vt.setParameter(update, 1, value);
+			update.setLong(2, id);
+			update.setString(3, name);
 
 			final int rowsChanged = update.executeUpdate();
 			if (rowsChanged == 0) {
