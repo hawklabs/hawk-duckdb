@@ -36,7 +36,7 @@ public class LoadBenchmarks {
 
 		for (Benchmark bench : benchmarks) {
 			final long benchTime = bench.run();
-			System.out.println(String.format("Benchmark %s: %d ms", bench, benchTime));
+			System.out.println(String.format("Benchmark %s: %d ms for %d rows", bench, benchTime, nRows));
 		}
 	}
 

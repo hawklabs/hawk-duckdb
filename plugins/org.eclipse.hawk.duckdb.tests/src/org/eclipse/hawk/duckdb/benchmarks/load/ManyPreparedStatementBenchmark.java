@@ -18,7 +18,7 @@ public class ManyPreparedStatementBenchmark extends AbstractLoadBenchmark implem
 			if (autocommit && i % 100 == 0) {
 				System.out.println(String.format("%s: loaded %d out of %d rows", getClass().getSimpleName(), i, nRows));
 			}
-			Row row = generator.generateRow();
+			Row row = generator.row();
 			try (PreparedStatement stmt = duckDB.prepareStatement("INSERT INTO data (indexName, keyName, keyValue, nodeId) VALUES (?, ?, ?, ?);")) {
 				stmt.setString(1, row.indexName);
 				stmt.setString(2, row.keyName);

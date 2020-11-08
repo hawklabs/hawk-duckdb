@@ -21,7 +21,7 @@ public class SinglePreparedStatementBenchmark extends AbstractLoadBenchmark impl
 					System.out.println(
 							String.format("%s: loaded %d out of %d rows", getClass().getSimpleName(), i, nRows));
 				}
-				Row row = generator.generateRow();
+				Row row = generator.row();
 				stmt.setString(1, row.indexName);
 				stmt.setString(2, row.keyName);
 				stmt.setLong(3, row.keyValue);

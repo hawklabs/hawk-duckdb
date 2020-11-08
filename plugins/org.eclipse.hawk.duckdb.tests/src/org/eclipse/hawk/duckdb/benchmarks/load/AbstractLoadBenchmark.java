@@ -34,6 +34,8 @@ public abstract class AbstractLoadBenchmark implements Benchmark {
 		final long millisEnd = System.currentTimeMillis();
 		checkRowCount();
 
+		duckDB.close();
+
 		return millisEnd - millisStart;
 	}
 

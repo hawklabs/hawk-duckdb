@@ -38,7 +38,7 @@ public class CopyCSVPipeBenchmark extends AbstractLoadBenchmark implements Bench
 			try (FileWriter fos = new FileWriter(fCSV, Charset.forName("UTF-8")); PrintWriter pw = new PrintWriter(fos)) {
 				pw.println("indexName|keyName|keyValue|nodeId");
 				for (int i = 0; i < nRows; i++) {
-					Row row = generator.generateRow();
+					Row row = generator.row();
 					pw.println(row.indexName + "|" + row.keyName + "|" + row.keyValue + "|" + row.nodeId);
 				}
 			} catch (IOException e) {
