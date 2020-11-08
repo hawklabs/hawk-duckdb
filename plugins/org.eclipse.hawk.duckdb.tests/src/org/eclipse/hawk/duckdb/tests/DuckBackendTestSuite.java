@@ -18,11 +18,11 @@ package org.eclipse.hawk.duckdb.tests;
 
 import java.util.Collections;
 
-import org.eclipse.hawk.backend.tests.GraphPopulationTest;
+import org.eclipse.hawk.backend.tests.IndexTest;
 import org.eclipse.hawk.backend.tests.factories.IGraphDatabaseFactory;
 import org.junit.runners.Parameterized.Parameters;
 
-public class DuckBackendTestSuite extends GraphPopulationTest {
+public class DuckBackendTestSuite extends IndexTest {
 
 	public DuckBackendTestSuite(IGraphDatabaseFactory dbFactory) {
 		super(dbFactory);
