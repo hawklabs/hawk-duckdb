@@ -37,7 +37,10 @@ public class DuckDatabase implements IGraphDatabase {
 	protected static final String TABLE_EDGES = "edges";
 	protected static final String TABLE_PROPERTIES = "properties";
 
-	protected Connection duckDB;
+	// turn to true to see all SQL printed on the console
+	static final boolean DEBUG_SQL = true;
+
+	private Connection duckDB;
 
 	private File duckDBFile;
 	private DuckTransaction tx;
@@ -88,7 +91,7 @@ public class DuckDatabase implements IGraphDatabase {
 		createSequence(stmt, SEQUENCE_ELEMENTS);
 
 		// Nodes
-		stmt.execute(String.format(
+		runSQL(stmt, String.format(
 			"CREATE TABLE %s ("
 			+ "  id BIGINT PRIMARY KEY,"
 			+ "  label VARCHAR NOT NULL"
@@ -100,14 +103,14 @@ public class DuckDatabase implements IGraphDatabase {
 
 		// Edges
 
-		stmt.execute(String.format(
+		runSQL(stmt, String.format(
 			"CREATE TABLE %s ("
 			+ "id BIGINT PRIMARY KEY,"
 			+ "from_node_id BIGINT NOT NULL,"
 			+ "to_node_id BIGINT NOT NULL,"
 			+ "label STRING NOT NULL,"
 			+ "UNIQUE (from_node_id, to_node_id, label)"
-			+ ")",
+			+ ");",
 			TABLE_EDGES));
 
 		createIndex(stmt, TABLE_EDGES, "outgoing", "from_node_id", "label");
@@ -115,7 +118,7 @@ public class DuckDatabase implements IGraphDatabase {
 
 		// Properties
 
-		stmt.execute(String.format(
+		runSQL(stmt, String.format(
 			"CREATE TABLE %s ("
 			+ "  elem_id BIGINT NOT NULL,"
 			+ "  name VARCHAR NOT NULL, %s,"
@@ -127,14 +130,28 @@ public class DuckDatabase implements IGraphDatabase {
 	}
 
 	private void createIndex(Statement stmt, String table, String idxSuffix, String... keys) throws SQLException {
-		stmt.execute(String.format(
+		runSQL(stmt, String.format(
 			"CREATE INDEX %s_%s ON %s (%s);",
 			table, idxSuffix, table, String.join(", ", Arrays.asList(keys))
 		));
 	}
 
 	private void createSequence(Statement stmt, final String seq) throws SQLException {
-		stmt.execute(String.format("CREATE SEQUENCE %s;", seq));
+		runSQL(stmt, String.format("CREATE SEQUENCE %s;", seq));
+	}
+
+	protected void runSQL(Statement stmt, final String sql) throws SQLException {
+		stmt.execute(sql);
+		if (DEBUG_SQL) {
+			System.out.println(sql);
+		}
+	}
+
+	protected PreparedStatement prepareSQL(final String sql) throws SQLException {
+		if (DEBUG_SQL) {
+			System.out.println(sql);
+		}
+		return duckDB.prepareStatement(sql);
 	}
 
 	@Override
@@ -204,8 +221,7 @@ public class DuckDatabase implements IGraphDatabase {
 
 			@Override
 			public int size() {
-				// TODO GABOR: why does this return *no rows* rather than a single row with 0 when no such nodes exist?
-				try (PreparedStatement stmt = duckDB.prepareStatement("SELECT COUNT(1) FROM nodes WHERE label = ?;")) {
+				try (PreparedStatement stmt = prepareSQL("SELECT COUNT(1) FROM nodes WHERE label = ?;")) {
 					stmt.setString(1, label);
 					ResultSet rs = stmt.executeQuery();
 					if (rs.next()) {
@@ -220,7 +236,7 @@ public class DuckDatabase implements IGraphDatabase {
 
 			@Override
 			public DuckNode getSingle() {
-				try (PreparedStatement stmt = duckDB.prepareStatement("SELECT id FROM nodes WHERE label = ? LIMIT 1;")) {
+				try (PreparedStatement stmt = prepareSQL("SELECT id FROM nodes WHERE label = ? LIMIT 1;")) {
 					stmt.setString(1, label);
 					ResultSet rs = stmt.executeQuery();
 					if (rs.next()) {
@@ -238,7 +254,7 @@ public class DuckDatabase implements IGraphDatabase {
 
 	@Override
 	public IGraphNode createNode(Map<String, Object> props, String label) {
-		try (PreparedStatement stmt = duckDB.prepareStatement(String.format("INSERT INTO %s (id, label) VALUES (?, ?);", TABLE_NODES))) {
+		try (PreparedStatement stmt = prepareSQL(String.format("INSERT INTO %s (id, label) VALUES (?, ?);", TABLE_NODES))) {
 			long nodeId = nextValue(SEQUENCE_ELEMENTS);
 			stmt.setLong(1, nodeId);
 			stmt.setString(2, label);
@@ -288,7 +304,7 @@ public class DuckDatabase implements IGraphDatabase {
 				"SELECT id FROM %s WHERE from_node_id = ? AND to_node_id = ? AND label = ?;",
 				TABLE_EDGES);
 
-			try (PreparedStatement stmt = duckDB.prepareStatement(sqlFindExisting)) {
+			try (PreparedStatement stmt = prepareSQL(sqlFindExisting)) {
 				stmt.setLong(1, startId);
 				stmt.setLong(2, endId);
 				stmt.setString(3, type);
@@ -303,7 +319,7 @@ public class DuckDatabase implements IGraphDatabase {
 				"INSERT INTO %s (id, from_node_id, to_node_id, label) VALUES (?, ?, ?, ?);",
 				TABLE_EDGES);
 
-			try (PreparedStatement stmt = duckDB.prepareStatement(sqlAddNewEdge)) {
+			try (PreparedStatement stmt = prepareSQL(sqlAddNewEdge)) {
 				final long newEdgeId = nextValue(SEQUENCE_ELEMENTS);
 
 				stmt.setLong(1, newEdgeId);
@@ -370,7 +386,7 @@ public class DuckDatabase implements IGraphDatabase {
 	 * Returns the next value in a sequence.
 	 */
 	private long nextValue(String sequence) throws SQLException {
-		try (PreparedStatement stmt = duckDB.prepareStatement("SELECT nextval(?);")) {
+		try (PreparedStatement stmt = prepareSQL("SELECT nextval(?);")) {
 			stmt.setString(1, sequence);
 			ResultSet rs = stmt.executeQuery();
 			rs.next();
@@ -384,7 +400,7 @@ public class DuckDatabase implements IGraphDatabase {
 	 */
 	private boolean tableExists(String table) {
 		try (Statement stmt = duckDB.createStatement()) {
-			stmt.execute(String.format("SELECT 1 FROM %s LIMIT 1", table));
+			runSQL(stmt, String.format("SELECT 1 FROM %s LIMIT 1", table));
 			return true;
 		} catch (SQLException ex) {
 			return false;

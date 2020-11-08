@@ -27,6 +27,9 @@ public class DuckTransaction implements IGraphTransaction {
 	@Override
 	public void success() {
 		try {
+			if (DuckDatabase.DEBUG_SQL) {
+				System.out.println("COMMIT");
+			}
 			duckDB.commit();
 			active = false;
 		} catch (SQLException e) {
@@ -37,6 +40,9 @@ public class DuckTransaction implements IGraphTransaction {
 	@Override
 	public void failure() {
 		try {
+			if (DuckDatabase.DEBUG_SQL) {
+				System.out.println("ROLLBACK");
+			}
 			duckDB.rollback();
 			active = false;
 		} catch (SQLException e) {
@@ -52,7 +58,11 @@ public class DuckTransaction implements IGraphTransaction {
 	public void begin() {
 		if (!active) {
 			try (Statement stmt = duckDB.createStatement()) {
-				stmt.execute("BEGIN TRANSACTION");
+				final String sql = "BEGIN TRANSACTION";
+				if (DuckDatabase.DEBUG_SQL) {
+					System.out.println(sql);
+				}
+				stmt.execute(sql);
 				active = true;
 			} catch (SQLException e) {
 				LOGGER.error("Failed to start a transaction", e);

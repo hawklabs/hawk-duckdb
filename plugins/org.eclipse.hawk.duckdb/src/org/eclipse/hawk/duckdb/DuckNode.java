@@ -131,7 +131,7 @@ public class DuckNode extends AbstractDuckElement implements IGraphNode {
 
 	private Iterable<IGraphEdge> getEdgeQueryIterable(String type, final String sqlOutgoing) {
 		try {
-			final PreparedStatement stmt = db.duckDB.prepareStatement(sqlOutgoing);
+			final PreparedStatement stmt = db.prepareSQL(sqlOutgoing);
 			return new EdgeResultSetIterable(type, stmt);
 		} catch (SQLException e) {
 			LOGGER.error("Failed to parse query to retrieve outgoing edges from node " + id, e);
@@ -159,7 +159,7 @@ public class DuckNode extends AbstractDuckElement implements IGraphNode {
 				"DELETE FROM %s WHERE id = ?;",
 				DuckDatabase.TABLE_NODES
 			);
-			try (PreparedStatement stmt = db.duckDB.prepareStatement(sqlDeleteNode)) {
+			try (PreparedStatement stmt = db.prepareSQL(sqlDeleteNode)) {
 				stmt.setLong(1, id);
 				stmt.execute();
 			}
@@ -168,7 +168,7 @@ public class DuckNode extends AbstractDuckElement implements IGraphNode {
 				"DELETE FROM %s WHERE elem_id IN (SELECT id FROM %s WHERE from_node_id = ? OR to_node_id = ?);",
 				DuckDatabase.TABLE_PROPERTIES, DuckDatabase.TABLE_EDGES
 			);
-			try (PreparedStatement stmt = db.duckDB.prepareStatement(sqlDeleteEdgeProperties)) {
+			try (PreparedStatement stmt = db.prepareSQL(sqlDeleteEdgeProperties)) {
 				stmt.setLong(1, id);
 				stmt.setLong(2, id);
 				stmt.execute();
@@ -178,7 +178,7 @@ public class DuckNode extends AbstractDuckElement implements IGraphNode {
 				"DELETE FROM %s WHERE from_node_id = ? OR to_node_id = ?;",
 				DuckDatabase.TABLE_EDGES
 			);
-			try (PreparedStatement stmt = db.duckDB.prepareStatement(sqlDeleteEdges)) {
+			try (PreparedStatement stmt = db.prepareSQL(sqlDeleteEdges)) {
 				stmt.setLong(1, id);
 				stmt.setLong(2, id);
 				stmt.execute();

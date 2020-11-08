@@ -42,7 +42,7 @@ public class AbstractDuckElement {
 			DuckDatabase.TABLE_PROPERTIES
 		);
 		
-		try (PreparedStatement query = db.duckDB.prepareStatement(sqlQuery)) {
+		try (PreparedStatement query = db.prepareSQL(sqlQuery)) {
 			query.setLong(1, id);
 	
 			ResultSet rs = query.executeQuery();
@@ -63,7 +63,7 @@ public class AbstractDuckElement {
 			PropertyValueType.sqlQueryColumns(),
 			DuckDatabase.TABLE_PROPERTIES);
 	
-		try (PreparedStatement vq = db.duckDB.prepareStatement(valueQuery)) {
+		try (PreparedStatement vq = db.prepareSQL(valueQuery)) {
 			vq.setLong(1, id);
 			vq.setString(2, name);
 	
@@ -96,7 +96,7 @@ public class AbstractDuckElement {
 			"UPDATE %s SET %s = $1%s WHERE elem_id = $2 AND name = $3;",
 			DuckDatabase.TABLE_PROPERTIES, vt.getColumnName(), vt == PropertyValueType.BLOB ? "::BLOB" : "");
 	
-		try (PreparedStatement update = db.duckDB.prepareStatement(updateQuery)) {
+		try (PreparedStatement update = db.prepareSQL(updateQuery)) {
 			vt.setParameter(update, 1, value);
 			update.setLong(2, id);
 			update.setString(3, name);
@@ -107,8 +107,8 @@ public class AbstractDuckElement {
 				final String insertQuery = String.format(
 					"INSERT INTO %s (elem_id, name, %s) VALUES (?, ?, ?);",
 					DuckDatabase.TABLE_PROPERTIES, vt.getColumnName());
-	
-				try (PreparedStatement insert = db.duckDB.prepareStatement(insertQuery)) {
+
+				try (PreparedStatement insert = db.prepareSQL(insertQuery)) {
 					insert.setLong(1, id);
 					insert.setString(2, name);
 					vt.setParameter(insert, 3, value);
@@ -125,8 +125,8 @@ public class AbstractDuckElement {
 			"DELETE FROM %s WHERE elem_id = ? AND name = ?;",
 			DuckDatabase.TABLE_PROPERTIES
 		);
-	
-		try (PreparedStatement stmt = db.duckDB.prepareStatement(sqlDelete)) {
+
+		try (PreparedStatement stmt = db.prepareSQL(sqlDelete)) {
 			stmt.setLong(1, id);
 			stmt.setString(2, name);
 			stmt.execute();
@@ -141,7 +141,7 @@ public class AbstractDuckElement {
 			"DELETE FROM %s WHERE elem_id = ?;",
 			DuckDatabase.TABLE_PROPERTIES
 		);
-		try (PreparedStatement stmt = db.duckDB.prepareStatement(sqlDeleteProps)) {
+		try (PreparedStatement stmt = db.prepareSQL(sqlDeleteProps)) {
 			stmt.setLong(1, id);
 			stmt.execute();
 		}

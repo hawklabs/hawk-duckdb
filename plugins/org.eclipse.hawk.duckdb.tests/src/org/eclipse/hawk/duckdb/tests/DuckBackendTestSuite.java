@@ -16,27 +16,30 @@
  ******************************************************************************/
 package org.eclipse.hawk.duckdb.tests;
 
-import org.eclipse.hawk.backend.tests.BackendTestSuite;
+import java.util.Collections;
+
+import org.eclipse.hawk.backend.tests.GraphPopulationTest;
+import org.eclipse.hawk.backend.tests.factories.IGraphDatabaseFactory;
 import org.junit.runners.Parameterized.Parameters;
 
-public class DuckBackendTestSuite extends BackendTestSuite {
+public class DuckBackendTestSuite extends GraphPopulationTest {
 
-//	public DuckBackendTestSuite(IGraphDatabaseFactory dbFactory) {
-//		super(dbFactory);
-//	}
-
-	@Parameters(name="{0}")
-	public static Object[][] params() {
-		return new Object[][] {
-			{ new DuckDatabaseFactory() },
-		};
+	public DuckBackendTestSuite(IGraphDatabaseFactory dbFactory) {
+		super(dbFactory);
 	}
 
 //	@Parameters(name="{0}")
-//	public static Iterable<Object[]> params() {
-//		return Collections.singletonList( new Object[] {
-//			new DuckDatabaseFactory()
-//		});
+//	public static Object[][] params() {
+//		return new Object[][] {
+//			{ new DuckDatabaseFactory() },
+//		};
 //	}
+
+	@Parameters(name="{0}")
+	public static Iterable<Object[]> params() {
+		return Collections.singletonList( new Object[] {
+			new DuckDatabaseFactory()
+		});
+	}
 	
 }

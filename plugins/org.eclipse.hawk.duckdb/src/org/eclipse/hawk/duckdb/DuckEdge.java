@@ -50,7 +50,7 @@ public class DuckEdge extends AbstractDuckElement implements IGraphEdge {
 			final String sqlDeleteEdge = String.format(
 				"DELETE FROM %s WHERE id = ?;", DuckDatabase.TABLE_EDGES
 			);
-			try (PreparedStatement stmt = db.duckDB.prepareStatement(sqlDeleteEdge)) {
+			try (PreparedStatement stmt = db.prepareSQL(sqlDeleteEdge)) {
 				stmt.setLong(1, id);
 				stmt.execute();
 			}
