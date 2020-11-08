@@ -36,7 +36,7 @@ public abstract class AbstractIndexBenchmark implements Benchmark {
 		final long loadStart = System.currentTimeMillis();
 		loadData();
 		final long loadEnd = System.currentTimeMillis();
-		System.out.println(String.format("%s loaded %d rows in %d ms", this, nRows, loadEnd - loadStart));
+		System.out.println(String.format("Benchmark %s: loaded %d rows in %d ms", this, nRows, loadEnd - loadStart));
 
 		try (Statement stmt = duckDB.createStatement()) {
 			stmt.execute("BEGIN TRANSACTION");

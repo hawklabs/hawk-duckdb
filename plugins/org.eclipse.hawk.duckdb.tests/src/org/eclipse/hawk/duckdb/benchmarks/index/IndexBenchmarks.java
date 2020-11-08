@@ -47,7 +47,7 @@ public class IndexBenchmarks {
 
 		for (Benchmark bench : benchmarks) {
 			final long benchTime = bench.run();
-			System.out.println(String.format("Benchmark %s: %d ms for %d iterations over %d rows", bench, benchTime, nIterations, nRows));
+			System.out.println(String.format("Benchmark %s: ran %d iterations in %d ms over %d rows", bench, nIterations, benchTime, nRows));
 		}
 	}
 
