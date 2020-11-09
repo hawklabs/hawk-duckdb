@@ -38,7 +38,7 @@ public class DuckDatabase implements IGraphDatabase {
 	protected static final String TABLE_PROPERTIES = "properties";
 
 	// turn to true to see all SQL printed on the console
-	static final boolean DEBUG_SQL = true;
+	static final boolean DEBUG_SQL = false;
 
 	private Connection duckDB;
 
