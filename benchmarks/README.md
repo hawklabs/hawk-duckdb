@@ -12,7 +12,7 @@ This is a standalone Maven project evaluating the performance of various ways to
 
 ## Node index mapping benchmarks
 
-`bench-index.sh` runs `IndexBenchmarks`, which compares several ways to represent Hawk node indices.
+`bench-node-index.sh` runs `IndexBenchmarks`, which compares several ways to represent Hawk node indices.
 Node indices are conceptually 4-tuples of the form `(index, key, value, node)` that need to support various types of queries:
 
 * Finding all entries in an index: `(index, *, *, *)`.
