@@ -21,10 +21,6 @@ public class AppenderBenchmark extends AbstractLoadBenchmark implements Benchmar
 		DuckDBConnection conn = (DuckDBConnection) duckDB;
 		try (DuckDBAppender appender = conn.createAppender("main", "data")) {
 			for (int i = 0; i < nRows; i++) {
-				if (autocommit && i % 100 == 0) {
-					System.out.println(
-							String.format("%s: loaded %d out of %d rows", getClass().getSimpleName(), i, nRows));
-				}
 				Row row = generator.row();
 
 				appender.beginRow();
