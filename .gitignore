@@ -29,3 +29,6 @@ stderr.txt
 # Maven build files
 target/
 
+*.duckdb
+*.duckdb.wal
+*.iml
