@@ -32,6 +32,9 @@ public class IndexBenchmarks {
 			// No real difference for this one (strings aren't really indexed in DuckDB 0.2.2)
 			new TablePerIndexWithKeyStringIndexBenchmark(createGenerator(), nRows, nIterations),
 
+			// Indexing all columns in the single-table approached helped for SQLite
+			new TablePerIndexAllColumnsIndexedBenchmark(createGenerator(), nRows, nIterations),
+
 			// This seems to be slower than just using one table per benchmark when there are few distinct keys
 			// (e.g. less than 20 or so in my Lenovo X1 laptop with an SSD), but much faster where there are
 			// many distinct keys? EXPAIN suggests that linear scans are still being used, even when I manually
