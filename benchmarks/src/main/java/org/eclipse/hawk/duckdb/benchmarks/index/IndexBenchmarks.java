@@ -23,8 +23,8 @@ public class IndexBenchmarks {
 			 * https://duckdb.org/docs/sql/indexes
 			 */
 			new SingleTableNoIndexBenchmark(createGenerator(), nRows, nIterations),
-			//new SingleTableAllColumnsIndexedBenchmark(createGenerator(), nRows, nIterations),
-			//new SingleTableIndexKeyIndexedBenchmark(createGenerator(), nRows, nIterations),
+			new SingleTableAllColumnsIndexedBenchmark(createGenerator(), nRows, nIterations),
+			new SingleTableIndexKeyIndexedBenchmark(createGenerator(), nRows, nIterations),
 
 			// This approach is faster as there are fewer rows to do a linear scan over
 			new TablePerIndexBenchmark(createGenerator(), nRows, nIterations),
@@ -54,7 +54,7 @@ public class IndexBenchmarks {
 	protected static DataGenerator createGenerator() {
 		final Random rnd = new Random(42);
 
-		final int nUniqueKeys = 50;
+		final int nUniqueKeys = 5;
 		final List<String> keys = new ArrayList<>();
 		for (int i = 0; i < nUniqueKeys; i++) {
 			keys.add("k" + i);

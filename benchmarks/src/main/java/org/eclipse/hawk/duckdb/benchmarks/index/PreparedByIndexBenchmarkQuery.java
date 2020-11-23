@@ -2,6 +2,7 @@ package org.eclipse.hawk.duckdb.benchmarks.index;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
@@ -40,7 +41,11 @@ public class PreparedByIndexBenchmarkQuery implements BenchmarkQuery {
 			}
 		});
 
+		assert query != null;
 		query.setString(1, row.keyName);
-		query.execute();
+		try (ResultSet rs = query.executeQuery()) {
+			// Make sure to loop through all results
+			while (rs.next());
+		}
 	}
 }

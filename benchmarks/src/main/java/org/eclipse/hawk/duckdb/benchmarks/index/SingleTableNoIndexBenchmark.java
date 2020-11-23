@@ -2,6 +2,7 @@ package org.eclipse.hawk.duckdb.benchmarks.index;
 
 import java.io.File;
 import java.io.IOException;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
@@ -21,7 +22,11 @@ public class SingleTableNoIndexBenchmark extends AbstractIndexBenchmark {
 			public void run(Row row) throws SQLException {
 				query.setString(1, row.keyName);
 				query.setString(2, row.indexName);
-				query.executeQuery().close();
+
+				try (ResultSet rs = query.executeQuery()) {
+					// Loop through all results
+					while (rs.next());
+				}
 			}
 		};
 	}
