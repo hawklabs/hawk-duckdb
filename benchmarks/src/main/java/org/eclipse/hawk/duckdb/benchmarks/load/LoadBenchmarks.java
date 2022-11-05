@@ -30,6 +30,9 @@ public class LoadBenchmarks {
 			// Fastest one so far, by a lot (as mentioned by Gabor)
 			new CopyCSVFileBenchmark(createGenerator(), nRows),
 
+			// Fast and the most convenient but currently limited to number/string/bool types
+			new AppenderBenchmark(createGenerator(), nRows),
+
 			// This one breaks in DuckDB 0.2.2: Unknown Error: Maximum line size of 1048576 bytes exceeded!
 			//new CopyCSVPipeBenchmark(createGenerator(), nRows),
 		};
